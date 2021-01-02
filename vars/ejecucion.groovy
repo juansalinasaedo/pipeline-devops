@@ -12,8 +12,14 @@ def call(){
 					def STAGE_NAME = ''
 					params.devtool
 				
-					def pipe = (params.devtool == 'gradle') ? load("gradle.groovy") : load("maven.groovy")
-					pipe.call()
+					/*def pipe = (params.devtool == 'gradle') ? load("gradle.groovy") : load("maven.groovy")
+					pipe.call()*/
+
+					if (params.buildtool == 'gradle'){
+					    gradle.call()	
+					} else {
+					    maven.call()
+					}
 				}
            }
         }
