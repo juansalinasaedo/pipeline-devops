@@ -14,6 +14,7 @@ def call() {
     stage('Jar'){
 		STAGE_NAME = Jar
 		sh 'mvn clean package -e'
+		sleep 30
 	}
 
 
