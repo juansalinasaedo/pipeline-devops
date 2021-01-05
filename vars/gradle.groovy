@@ -3,6 +3,7 @@ def call(){
 
   // Si stage es vacio se toman todos los stages
     _stage = params.stage ? params.stage.split(';') : stages
+    println _stage
 
     // Se valida el stage ingresado
     _stage.each { el ->
