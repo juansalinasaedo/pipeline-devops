@@ -31,7 +31,7 @@ def call() {
 	    stage('Jar'){
 			env.LAST_STAGE_NAME = env.STAGE_NAME
 			sh 'mvn clean package -e'
-			sleep 30
+			sleep 20
 		}
 	}
 
@@ -50,7 +50,8 @@ def call() {
       stage('uploadNexus') {
           env.LAST_STAGE_NAME = env.STAGE_NAME
           nexusPublisher nexusInstanceId: 'nexus', nexusRepositoryId: 'test-nexus', packages: [[$class: 'MavenPackage', mavenAssetList: [[classifier: '', extension: 'jar', filePath: 'build/DevOpsUsach2020-0.0.1.jar']], mavenCoordinate: [artifactId: 'DevOpsUsach2020', groupId: 'com.devopsusach2020', packaging: 'jar', version: '0.0.1']]]
-         
+       	  sleep 20	  
+       
        }  
     }    
 }
