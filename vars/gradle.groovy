@@ -40,7 +40,7 @@ def call(){
       env.LAST_STAGE_NAME = env.STAGE_NAME
       //sh "nohup bash gradlew bootRun &"
       sh "nohup gradle bootRun &"
-      sleep 30
+      sleep 20
     }
   }
 
@@ -50,6 +50,7 @@ def call(){
       //STAGE_NAME = 'Test'
       env.LAST_STAGE_NAME = env.STAGE_NAME
       sh "curl -X GET 'http://localhost:8082/rest/mscovid/test?msg=testing'"
+      sleep 20
     }
   }
 
