@@ -20,7 +20,7 @@ def call(){
                   println 'Herramientas de Ejecucion: ' + params.herramientas
                   println 'Stage: ' + params.stage
 
-                  if (params.buildtool == 'gradle'){
+                  if (params.herramientas == 'gradle'){
                     gradle.call()
                   } else {
                     maven.call()
@@ -33,11 +33,11 @@ def call(){
 
     post {
             success {
-                slackSend color: 'good', message: "[Juan Salinas][${env.JOB_NAME}][${params.buildtool}] Ejecución exitosa"
+                slackSend color: 'good', message: "[Juan Salinas][${env.JOB_NAME}][${params.herramientas}] Ejecución exitosa"
             }
 
             failure {
-                slackSend color: 'danger', message: "[Juan Salinas][${env.JOB_NAME}][${params.buildtool}] Ejecución fallida en stage ${env.LAST_STAGE_NAME}"
+                slackSend color: 'danger', message: "[Juan Salinas][${env.JOB_NAME}][${params.herramientas}] Ejecución fallida en stage ${env.LAST_STAGE_NAME}"
             }
     }    
 
