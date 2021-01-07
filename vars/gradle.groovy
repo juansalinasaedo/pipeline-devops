@@ -1,6 +1,6 @@
 def call(stageOptions){
 
-  //figlet 'gradle'
+  figlet 'gradle'
 
   def buildEjecutado = false;
 

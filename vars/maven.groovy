@@ -1,6 +1,6 @@
 def call(stageOptions) {
 
-	//figlet 'maven'
+	figlet 'maven'
 
 	def buildEjecutado = false;
 
