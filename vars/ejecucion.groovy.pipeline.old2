@@ -12,15 +12,16 @@ def call(){
         stage('Pipeline') {
             steps {
                 script {
-                  env.TAREA = ''
-                  echo "1.-HERRAMIENTA SELECCIONADA: ${params.HERRAMIENTA}" 
-                  echo "2.-PARAMETROS SELECCIONADOS: ${stage}"   
-                  echo "3.-Running ${env.BUILD_ID} on ${env.JENKINS_URL}"   
+                 // env.TAREA = ''
+                  println 'Herramientas de Ejecucion: ' + params.herramientas
+                  println 'Stage: ' + params.stage
 
                   if (params.herramientas == 'gradle'){
-                    gradle.call(stage)
+                    //gradle.call()
+                    gradle "${params.stages}"
                   } else {
-                    maven.call(stage)
+                    maven "${params.stages}"
+                    //maven.call()
                   }
 
                 }
