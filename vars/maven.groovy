@@ -1,59 +1,50 @@
-def call() {
+import pipeline.*
 
-	stages = ['Compile', 'Test', 'Jar', 'SonarQube', 'uploadNexus']
+def call(String chosenStages) {
 
-	// Si stage es vacio se toman todos los stages
-    _stage = params.stage ? params.stage.split(';') : stages
+	figlet 'maven'
 
-    // Se valida el stage ingresado
-    _stage.each { el ->
-        if (!stages.contains(el)) {
-            throw new Exception("Stage: $el no es una opción válida.")
-        }
+	def pipelineStages = ['compile', 'test', 'jar', 'runJar', 'sonar', 'nexus']
+
+	def utils = new test.MethodsUI()
+  	def stages = utils.getValidatedStages(choseStages, pipelineStages)
+
+  	stages.each{
+    stage(it){
+      try {
+        "${it}"()
+      }
+      catch(Exception e) {
+        error "Stage ${it} tiene problemas: ${e}"
+      }
     }
+  }
+}  
+
+def compile(){
+  sh 'mvn clean compile -e'	
+}
+
+def test(){
+  sh 'mvn clean test -e'
+}
+
+def jar(){
+  sh 'mvn clean package -e'	
+}
+
+def runJar(){
+	sh 'nohup bash mvn spring-boot:run &'
+}
+
+def sonar(){
+	withSonarQubeEnv(installationName: 'sonar'){
+		sh 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.7.0.1746:sonar'
+	}
+}
   
-  	if(_stage.contains('Compile')) {
-	    stage('Compile'){
-	    	 env.LAST_STAGE_NAME = env.STAGE_NAME
-	    	 sh 'mvn clean compile -e'
-		}
-	}	
-
-    if(_stage.contains('Test')) {
-	    stage('Test'){
-	    	env.LAST_STAGE_NAME = env.STAGE_NAME
-			sh 'mvn clean test -e'
-		}
-	}	
-
-      
-    if(_stage.contains('Jar')) {  
-	    stage('Jar'){
-			env.LAST_STAGE_NAME = env.STAGE_NAME
-			sh 'mvn clean package -e'
-			sleep 20
-		}
-	}
-
-
-    if(_stage.contains('SonarQube')) {
-	     stage('SonarQube'){
-			env.LAST_STAGE_NAME = env.STAGE_NAME
-			withSonarQubeEnv(installationName: 'sonar'){
-				sh 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.7.0.1746:sonar'
-			}
-		}
-	}
-
-
-	if(_stage.contains('uploadNexus')) {
-      stage('uploadNexus') {
-          env.LAST_STAGE_NAME = env.STAGE_NAME
-          nexusPublisher nexusInstanceId: 'nexus', nexusRepositoryId: 'test-nexus', packages: [[$class: 'MavenPackage', mavenAssetList: [[classifier: '', extension: 'jar', filePath: 'build/DevOpsUsach2020-0.0.1.jar']], mavenCoordinate: [artifactId: 'DevOpsUsach2020', groupId: 'com.devopsusach2020', packaging: 'jar', version: '0.0.1']]]
-       	  sleep 20	  
-       
-       }  
-    }    
+def nexus(){
+	nexusPublisher nexusInstanceId: 'nexus', nexusRepositoryId: 'test-nexus', packages: [[$class: 'MavenPackage', mavenAssetList: [[classifier: '', extension: 'jar', filePath: 'build/DevOpsUsach2020-0.0.1.jar']], mavenCoordinate: [artifactId: 'DevOpsUsach2020', groupId: 'com.devopsusach2020', packaging: 'jar', version: '0.0.1']]]
 }
 
 return this;

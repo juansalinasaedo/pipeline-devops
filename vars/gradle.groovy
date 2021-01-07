@@ -1,67 +1,52 @@
-def call(){
-  stages = ['Build & Test', 'Sonar', 'Run', 'Rest', 'Nexus']
+import pipeline.*
 
-  // Si stage es vacio se toman todos los stages
-    _stage = params.stage ? params.stage.split(';') : stages
-    println _stage
+def call(String choseStages){
 
-    // Se valida el stage ingresado
-    _stage.each { el ->
-        if (!stages.contains(el)) {
-            throw new Exception("Stage: $el no es una opción válida.")
-        }
-    }
+  figlet 'gradle'
 
-    if(_stage.contains('Build & Test')) {
-    stage('Build & Test'){
-      //STAGE_NAME = 'Build & test'
-      //env.TAREA = env.STAGE_NAME
-      //sh "./gradlew clean build"
-      sh "gradle clean build"
-    } 
-  }
+  def pipelineStages = ['buildAndTest', 'sonar', 'jar', 'rest', 'nexus']
 
-  if(_stage.contains('Sonar')) {
-    stage('Sonar'){
-      env.LAST_STAGE_NAME = env.STAGE_NAME
-      def scannerHome = tool 'sonar-scanner';
+  def utils = new test.MethodsUI()
+  def stages = utils.getValidatedStages(choseStages, pipelineStages)
 
-        withSonarQubeEnv('sonar') {
-          sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=ejemplo-gradle -Dsonar.java.binaries=build"
-        }
-      
+  stages.each{
+    stage(it){
+      try {
+        "${it}"()
+      }
+      catch(Exception e) {
+        error "Stage ${it} tiene problemas: ${e}"
+      }
     }
   }
+}  
 
+def hola(){
+  println 'Hola Mundo'
+}
 
-  if(_stage.contains('Run')) {
-    stage('Run'){
-      //STAGE_NAME = 'Run'
-      env.LAST_STAGE_NAME = env.STAGE_NAME
-      //sh "nohup bash gradlew bootRun &"
-      sh "nohup gradle bootRun &"
-      sleep 20
-    }
-  }
+def buildAndTest(){
+  sh "gradle clean build" 
+}
 
+def sonar(){
+  //def sonarhome = tool 'sonar-scanner'
+  def scannerHome = tool 'sonar-scanner';
+  sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=ejemplo-gradle -Dsonar.java.binaries=build"
+}
 
-  if(_stage.contains('Rest')) {
-    stage('Rest'){
-      //STAGE_NAME = 'Test'
-      env.LAST_STAGE_NAME = env.STAGE_NAME
-      sh "curl -X GET 'http://localhost:8082/rest/mscovid/test?msg=testing'"
-      sleep 20
-    }
-  }
+def jar(){
+  sh "nohup gradle bootRun &"
+  sleep 20
+}
+    
 
-  if(_stage.contains('Nexus')) {
-    stage('Nexus'){
-      //STAGE_NAME = 'Nexus'
-      env.LAST_STAGE_NAME = env.STAGE_NAME
-      nexusPublisher nexusInstanceId: 'nexus', nexusRepositoryId: 'test-nexus', packages: [[$class: 'MavenPackage', mavenAssetList: [[classifier: '', extension: 'jar', filePath: 'build/libs/DevOpsUsach2020-0.0.1.jar']], mavenCoordinate: [artifactId: 'DevOpsUsach2020', groupId: 'com.devopsusach2020', packaging: 'jar', version: '0.0.1']]]
-      sleep 20
-    }
-  }
+def rest(){
+  sh "curl -X GET 'http://localhost:8082/rest/mscovid/test?msg=testing'"
+}
+
+def nexus(){
+  nexusPublisher nexusInstanceId: 'nexus', nexusRepositoryId: 'test-nexus', packages: [[$class: 'MavenPackage', mavenAssetList: [[classifier: '', extension: 'jar', filePath: 'build/libs/DevOpsUsach2020-0.0.1.jar']], mavenCoordinate: [artifactId: 'DevOpsUsach2020', groupId: 'com.devopsusach2020', packaging: 'jar', version: '0.0.1']]]
 }
 
 return this;

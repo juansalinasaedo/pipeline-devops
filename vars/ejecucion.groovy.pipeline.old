@@ -5,11 +5,15 @@ def call(){
 
     parameters { 
         choice(name: 'herramientas', choices: ['gradle', 'maven'], description: 'Elección de herramienta de construcción para aplicación covid') 
-        string(name: 'stage', defaultValue: '', description: 'Escribir stages a ejecutar en formato: stage1;stage2;stage3. Si stage es vacío, se ejecutarán todos los stages')
+        string(name: 'stage', defaultValue: '', description: '')
     } 
  
     stages {
         stage('Pipeline') {
+            environment {
+              LAST_STAGE_NAME = ''
+            }
+
             steps {
                 script {
                  // env.TAREA = ''
@@ -17,11 +21,9 @@ def call(){
                   println 'Stage: ' + params.stage
 
                   if (params.herramientas == 'gradle'){
-                    //gradle.call()
-                    gradle "${params.stages}"
+                    gradle.call()
                   } else {
-                    maven "${params.stages}"
-                    //maven.call()
+                    maven.call()
                   }
 
                 }
