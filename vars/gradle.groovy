@@ -6,7 +6,7 @@ def call(String choseStages){
 
   def pipelineStages = ['buildAndTest', 'sonar', 'jar', 'rest', 'nexus']
 
-  def utils = new test.MethodsUI()
+  def utils = new test.UtilMethods()
   def stages = utils.getValidatedStages(choseStages, pipelineStages)
 
   stages.each{
