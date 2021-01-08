@@ -1,48 +1,35 @@
-def call(String stageParam) {
+def call(){
+  
+        def downloadOK = false;
+        figlet 'Gradle'
+        figlet 'Despliegue Continuo'
 
-    stages = ['downloadNexus', 'runDownloadedJar', 'rest', 'nexusCD']
-
-   _stage = stageParam ? stageParam.split(';') : stages
-    // Se valida el stage que el usuario ingrese
-    _stage.each { el ->
-        if (!stages.contains(el)) {
-            throw new Exception("Stage: $el no es valido")
+        stage("downloadNexus"){    
+            env.TAREA =  env.STAGE_NAME       
+            sh 'curl -X GET -u admin:admin http://localhost:8082/repository/test-nexus/com/devopsusach2020/DevOpsUsach2020/0.0.1/DevOpsUsach2020-0.0.1.jar -O' 
+            downloadOK = true;
         }
-    }
-
-	if(_stage.contains('downloadNexus')) {
-        stage('downloadNexus') {
-            env.LAST_STAGE_NAME = env.STAGE_NAME
-            sh "curl -X GET -U admin:admin http://localhost:8081/repository/test-repo/com/devopsusach2020/DevOpsUsach2020/0.0.1/DevOpsUsach2020-0.0.1.jar -O"
-            sh "ls -ltr"
-        }
-    }
-
-    if(_stage.contains('runDownloadedJar')) {
-        stage('runDownloadedJar') {
-            env.LAST_STAGE_NAME = env.STAGE_NAME
-            sh "nohup java -jar DevOpsUsach2020-0.0.1.jar --server.port=8083 &"
-            sleep 20
-        }
-    }
 
 
-    if(_stage.contains('rest')) {
-        stage('rest') {
-            env.LAST_STAGE_NAME = env.STAGE_NAME
-            sh "curl -X GET 'http://localhost:8081/rest/mscovid/test?msg=testing'"
-            //sh 'curl -X GET "http://localhost:8081/rest/mscovid/test?msg=testing"'
-        }
-    }
+        stage("runDownloadedJar"){    
+            env.TAREA =  env.STAGE_NAME   
+            if (downloadOK) {
+                sh "java -jar DevOpsUsach2020-0.0.1.jar &"
+                sleep 20   
+            }             
+        }  
 
+        stage("rest"){
+            env.TAREA =  env.STAGE_NAME 
+            if (downloadOK) 
+                sh 'curl -X GET "http://localhost:8082/rest/mscovid/test?msg=testing"'
+        }  
 
-    if(_stage.contains('nexusCD')) {
-        stage('nexusCD') {
-            env.LAST_STAGE_NAME = env.STAGE_NAME
-            nexusPublisher nexusInstanceId: 'nexus', nexusRepositoryId: 'test-nexus', packages: [[$class: 'MavenPackage', mavenAssetList: [[classifier: '', extension: 'jar', filePath: 'build/libs/DevOpsUsach2020-0.0.1.jar']], mavenCoordinate: [artifactId: 'DevOpsUsach2020', groupId: 'com.devopsusach2020', packaging: 'jar', version: 'v1-0-0']]]
-        }
-    }
-
+        stage("nexusCD"){    
+            env.TAREA =  env.STAGE_NAME   
+            if (downloadOK)          
+                nexusPublisher nexusInstanceId: 'nexus', nexusRepositoryId: 'test-nexus', packages: [[$class: 'MavenPackage', mavenAssetList: [[classifier: '', extension: 'jar', filePath: 'DevOpsUsach2020-0.0.1.jar']], mavenCoordinate: [artifactId: 'DevOpsUsach2020', groupId: 'com.devopsusach2020', packaging: 'jar', version: 'release-v1.0.0']]]                     
+        }                    
 
 }
 
