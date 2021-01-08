@@ -30,7 +30,7 @@ def call(String stageParam) {
     if(_stage.contains('rest')) {
         stage('rest') {
             env.LAST_STAGE_NAME = env.STAGE_NAME
-            sh "curl -X GET 'http://localhost:8083/rest/mscovid/test?msg=testing'"
+            sh "curl -X GET 'http://localhost:8081/rest/mscovid/test?msg=testing'"
             //sh 'curl -X GET "http://localhost:8081/rest/mscovid/test?msg=testing"'
         }
     }
