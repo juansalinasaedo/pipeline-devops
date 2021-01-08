@@ -40,7 +40,7 @@ def call(){
         stage("rest"){
             env.TAREA =  env.STAGE_NAME 
             if (buildEjecutado) 
-                sh 'curl -X GET "http://localhost:8082/rest/mscovid/test?msg=testing"'
+                sh 'curl -X GET "http://localhost:8088/rest/mscovid/test?msg=testing"'
         }  
 
         stage("nexusCI"){    
