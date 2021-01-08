@@ -20,8 +20,8 @@ def call(){
 
         stage("rest"){
             env.TAREA =  env.STAGE_NAME 
-            if (descarga) 
-                //sh 'curl -X GET "http://localhost:8082/rest/mscovid/test?msg=testing"'
+           /* if (descarga) 
+                sh 'curl -X GET "http://localhost:8082/rest/mscovid/test?msg=testing"' */
         }  
 
         stage("nexusCD"){    
