@@ -15,7 +15,7 @@ def call(){
             if (descarga) {
                 //sh "java -jar DevOpsUsach2020-0.0.1.jar &"
                 sh "java -jar DevOpsUsach2020-0.0.1.jar --server.port=8088"
-                sleep 100   
+                sleep 50  
             }             
         }  
 
