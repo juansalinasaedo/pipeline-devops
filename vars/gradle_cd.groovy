@@ -1,12 +1,11 @@
 def call(){
   
         def downloadOK = false;
-        figlet 'Gradle'
-        figlet 'Despliegue Continuo'
+        figlet 'Gradle CD'
 
         stage("downloadNexus"){    
             env.TAREA =  env.STAGE_NAME       
-            sh 'curl -X GET -u admin:admin http://localhost:8082/repository/test-nexus/com/devopsusach2020/DevOpsUsach2020/0.0.1/DevOpsUsach2020-0.0.1.jar -O' 
+            sh 'curl -X GET -u admin:admin http://localhost:8081/repository/test-nexus/com/devopsusach2020/DevOpsUsach2020/0.0.1/DevOpsUsach2020-0.0.1.jar -O' 
             downloadOK = true;
         }
 
