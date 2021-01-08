@@ -1,44 +1,39 @@
 def call(){
   
-  pipeline {
+	pipeline {
     agent any
+	
+	parameters { choice(name: 'devtool', choices: ['maven', 'gradle'], description: 'Elección de herramienta de construcción para aplicación covid') }
 
-    parameters { 
-        choice(name: 'herramientas', choices: ['gradle', 'maven'], description: 'Elección de herramienta de construcción para aplicación covid') 
-        string(name: 'stage', defaultValue: '', description: 'Escribir stages a ejecutar en formato: stage1;stage2;stage3. Si stage es vacío, se ejecutarán todos los stages')
-    } 
- 
     stages {
         stage('Pipeline') {
             steps {
                 script {
-                  env.TAREA = ''
-                  echo "1.-HERRAMIENTA SELECCIONADA: ${params.HERRAMIENTA}" 
-                  echo "2.-PARAMETROS SELECCIONADOS: ${stage}"   
-                  echo "3.-Running ${env.BUILD_ID} on ${env.JENKINS_URL}"   
+					def STAGE_NAME = ''
+					params.devtool
+				
+					/*def pipe = (params.devtool == 'gradle') ? load("gradle.groovy") : load("maven.groovy")
+					pipe.call()*/
 
-                  if (params.herramientas == 'gradle'){
-                    gradle.call(stage)
-                  } else {
-                    maven.call(stage)
-                  }
-
-                }
-            }
+					if (params.buildtool == 'gradle'){
+					    gradle.call()	
+					} else {
+					    maven.call()
+					}
+				}
+           }
         }
     }
-
-    post {
-            success {
-                slackSend color: 'good', message: "[Juan Salinas][${env.JOB_NAME}][${params.herramientas}] Ejecución exitosa"
-            }
-
-            failure {
-                slackSend color: 'danger', message: "[Juan Salinas][${env.JOB_NAME}][${params.herramientas}] Ejecución fallida en stage ${env.LAST_STAGE_NAME}"
-            }
-    }    
-
-  }  
+	
+	post {
+		success {
+			slackSend color: 'good', message: "[Juan Salinas][pipeline-maven-gradle][${params.devtool}] Ejecución exitosa."
+		}
+		failure {
+			slackSend color: 'danger', message: "[Juan Salinas][pipeline-maven-gradle][${params.devtool}] Ejecución fallida en stage ${STAGE_NAME}."
+			}
+		}
+	}
 
 }
 

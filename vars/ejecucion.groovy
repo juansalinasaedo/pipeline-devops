@@ -3,32 +3,35 @@ def call(){
   pipeline {
     agent any
 
-   /* parameters { 
+   parameters { 
         choice(name: 'herramientas', choices: ['gradle', 'maven'], description: 'Elección de herramienta de construcción para aplicación covid') 
         string(name: 'stage', defaultValue: '', description: 'Escribir stages a ejecutar en formato: stage1;stage2;stage3. Si stage es vacío, se ejecutarán todos los stages')
-    } */
+    } 
  
     stages {
         stage('Pipeline') {
+
+           environment {
+             LAST_STAGE_NAME = ''
+           }
+
             steps {
                 script {
                   
-                  //Segun el valor del parametro se inovacara a gradle o maven
-                  sh 'env'
-                  env.TAREA = ''
-                  /*echo "1.-HERRAMIENTA SELECCIONADA: ${params.HERRAMIENTA}" 
-                  echo "2.-PARAMETROS SELECCIONADOS: ${stage}"   
-                  echo "3.-Running ${env.BUILD_ID} on ${env.JENKINS_URL}" */
-                  echo "-RUNNING ${env.BUILD_ID} on ${env.JENKINS_URL}" 
-                  echo "-GIT_BRANCH ${env.GIT_BRANCH}"   
+                  println "BRANCH_NAME: " + env.BRANCH_NAME
+                  pipelineType = env.BRANCH_NAME ==~ /release-v(\d{1,3})\-(\d{1,3})\-(\d{1,3})/ ? "CD" : "CI"
+                  figlet params.herramientas
+                  figlet pipelineType
 
-                  if (env.GIT_BRANCH == "develop" || env.GIT_BRANCH == "feature"){
-                    gradle.call();
-                  } else if (env.GIT_BRANCH.contains("release")){
-                    maven.call();
-                  } else {
-                    echo "No se ha procesado la rama ${env.GIT_BRANCH}"
-                  }
+                  if (params.herramientas == 'gradle') { 
+                      if(pipelineType == "CI") {
+                          gradle_ci.call(params.stage)
+                      } else { 
+                          gradle_cd.call(params.stage)
+                         }
+                      } else {
+                          maven.call()
+                     }
 
                 }
             }
@@ -37,13 +40,11 @@ def call(){
 
     post {
             success {
-               // slackSend color: 'good', message: "[Juan Salinas][${env.JOB_NAME}][${params.herramientas}] Ejecución exitosa"
-               slackSend color: 'good', message: "[Juan Salinas][${env.JOB_NAME}][${env.GIT_BRANCH}] Ejecución exitosa"
+               slackSend color: 'good', message: "[Juan Salinas][${env.JOB_NAME}][${params.herramientas}] Ejecución exitosa"
             }
 
             failure {
-               // slackSend color: 'danger', message: "[Juan Salinas][${env.JOB_NAME}][${params.herramientas}] Ejecución fallida en stage ${env.LAST_STAGE_NAME}"
-               slackSend color: 'danger', message: "[Juan Salinas][${env.JOB_NAME}][${env.GIT_BRANCH}] Ejecución fallida en stage ${env.TAREA}"
+               slackSend color: 'danger', message: "[Juan Salinas][${env.JOB_NAME}][${params.herramientas}] Ejecución fallida en stage ${env.LAST_STAGE_NAME}"
             }
     }    
 

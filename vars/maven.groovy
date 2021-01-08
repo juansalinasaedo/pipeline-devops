@@ -1,71 +1,55 @@
-def call(stageOptions) {
+def call() {
 
-	//figlet 'maven'
+  stages = ['compile', 'test', 'jar', 'SonarQube', 'uploadNexus']
 
-	def buildEjecutado = false;
-
-	 stage("Validar"){
-
-      if (
-        stageOptions.contains('compile')  ||
-        stageOptions.contains('test')     ||
-        stageOptions.contains('jar')      ||
-        stageOptions.contains('sonar')    ||
-        stageOptions.contains('nexus')    || 
-        (stageOptions =='')
-        ) {
-           echo "Ejecutando Stage..."
-          } else {
-           currentBuild.result = 'FAILURE'
-           echo "Ejecución fallida, parametros desconocidos"
-          }   
-    }
-   
-
-  stage('compile') {
-    env.TAREA = env.STAGE_NAME
-    buildEjecutado = false;
-    if (stageOptions.contains('compile') || (stageOptions == '')) {
-      sh 'mvn clean compile -e'
-    }
-  }
-
-  stage('test') {
-    env.TAREA = env.STAGE_NAME
-    if (stageOptions.contains('test') || (stageOptions == '')) {
-      sh 'mvn clean test -e'
-    }
-  }
-
-  stage('jar'){
-    env.TAREA = env.STAGE_NAME
-    if (stageOptions.contains('jar') || (stageOptions == '')){
-      sh 'mvn clean package -e' 
-      buildEjecutado = true;
-    }
-  }
-
-  stage('sonar') {
-    env.TAREA = env.STAGE_NAME
-    if (!buildEjecutado){
-      currentBuild.result = 'FAILURE'
-      cho "No puede ejecutar Sonar, no se ha ejecutado Build"
-      buildEjecutado = false;
+   _stage = params.stage ? params.stage.split(';') : stages
+   _stage.each { el ->
+        if (!stages.contains(el)) {
+            throw new Exception("Stage: $el no es valido")
+        }
     }
 
-    def scannerHome = tool 'sonar-scanner';
-    withSonarQubeEnv('sonar') {
-      if((stageOptions.contains('sonar') || (stageOptions == '')) && (buildEjecutado))
-         sh 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.7.0.1746:sonar'
-    }
-  }
 
-  stage('nexus') {
-    env.TAREA = env.STAGE_NAME
-    if ((stageOptions.contains('nexus') || (stageOptions == '')) && (buildEjecutado)) 
-      nexusPublisher nexusInstanceId: 'nexus', nexusRepositoryId: 'test-nexus', packages: [[$class: 'MavenPackage', mavenAssetList: [[classifier: '', extension: 'jar', filePath: 'build/DevOpsUsach2020-0.0.1.jar']], mavenCoordinate: [artifactId: 'DevOpsUsach2020', groupId: 'com.devopsusach2020', packaging: 'jar', version: '0.0.1']]]
-    
-  }
+  if(_stage.contains('compile')) {
+        stage('compile') {
+            env.LAST_STAGE_NAME = env.STAGE_NAME
+            sh 'mvn clean compile -e'
+        }
+    }
+	
+  
+  if(_stage.contains('test')) {
+        stage('test') {
+            env.LAST_STAGE_NAME = env.STAGE_NAME
+            sh 'mvn clean test -e'
+        }
+    }
+  
+
+  if(_stage.contains('jar')) {
+        stage('jar') {
+            env.LAST_STAGE_NAME = env.STAGE_NAME
+            sh 'mvn clean package -e' 
+        }
+    }
+
+
+  if(_stage.contains('SonarQube')) {
+        stage('SonarQube') {
+            env.LAST_STAGE_NAME = env.STAGE_NAME
+            withSonarQubeEnv(installationName: 'sonar') {
+                sh 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.7.0.1746:sonar'
+            }
+        }
+    }
+
+  if(_stage.contains('uploadNexus')) {
+        stage('uploadNexus') {
+            env.LAST_STAGE_NAME = env.STAGE_NAME
+            nexusPublisher nexusInstanceId: 'nexus', nexusRepositoryId: 'test-nexus', packages: [[$class: 'MavenPackage', mavenAssetList: [[classifier: '', extension: 'jar', filePath: 'build/DevOpsUsach2020-0.0.1.jar']], mavenCoordinate: [artifactId: 'DevOpsUsach2020', groupId: 'com.devopsusach2020', packaging: 'jar', version: '0.0.1']]]
+        }
+    }
+  
 }
 
 return this;
