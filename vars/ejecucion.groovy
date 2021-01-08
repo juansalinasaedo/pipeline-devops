@@ -10,21 +10,28 @@ def call(){
  
     stages {
         stage('Pipeline') {
+
+           environment {
+             LAST_STAGE_NAME = ''
+           }
+
             steps {
                 script {
-                sh 'env'
-                env.TAREA = '' 
-                echo "Corriendo ${env.BUILD_ID} en la direccion: ${env.JENKINS_URL}" 
-                echo "Rama: ${env.GIT_BRANCH}"   
+                  BRANCH_NAME = env.GIT_BRANCH.replace('origin/', '')
+                  println "BRANCH_NAME: " + env.BRANCH_NAME
+                  pipelineType = env.BRANCH_NAME ==~ /release-v(\d{1,3})\-(\d{1,3})\-(\d{1,3})/ ? "CD" : "CI"
+                  figlet params.herramientas
+                  figlet pipelineType
 
-                                          
-                if (env.GIT_BRANCH == "develop" || env.GIT_BRANCH == "feature"){
-                        gradle_ci.call();
-                } else if (env.GIT_BRANCH.contains("release")){  
-                        gradle_cd.call();                 
-                } else {
-                    echo " No ejecuta la rama<${env.GIT_BRANCH}>" 
-                }
+                  if (params.herramientas == 'gradle') { 
+                      if(pipelineType == "CI") {
+                          gradle_ci.call(params.stage)
+                      } else { 
+                          gradle_cd.call(params.stage)
+                         }
+                      } else {
+                          maven.call()
+                     }
 
                 }
             }
